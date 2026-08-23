@@ -18,11 +18,17 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.keycloak:keycloak-admin-client:26.0.12'
+
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-scalar:3.0.3'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+	testImplementation 'org.springframework.security:spring-security-test'
 
-// MapStruct dependency
+	// MapStruct dependency
 	compileOnly 'org.mapstruct:mapstruct:1.6.3'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'

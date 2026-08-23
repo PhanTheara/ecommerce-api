@@ -1,7 +1,7 @@
 package com.istad.theara.ecommerce_api;
 
-import com.istad.theara.ecommerce_api.entity.CategoryEntity;
-import com.istad.theara.ecommerce_api.repository.CategoryRepository;
+import com.istad.theara.ecommerce_api.features.category.CategoryEntity;
+import com.istad.theara.ecommerce_api.features.category.CategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
