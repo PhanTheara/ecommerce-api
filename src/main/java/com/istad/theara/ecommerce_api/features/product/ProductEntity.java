@@ -1,7 +1,7 @@
 package com.istad.theara.ecommerce_api.features.product;
 
-import com.istad.theara.ecommerce_api.app.entity.OrderLinesEntity;
 import com.istad.theara.ecommerce_api.features.category.CategoryEntity;
+import com.istad.theara.ecommerce_api.features.orders.Entity.OrderLinesEntity;
 import com.istad.theara.ecommerce_api.features.tag.TagEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

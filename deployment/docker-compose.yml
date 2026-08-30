@@ -5,6 +5,31 @@ volumes:
   sb13-vol:
   keycloak-sb13-vol:
 services:
+
+  spring-sb13:
+    image: spring-13:1.0.0
+    build: ./spring
+    container_name: spring-sb13
+    ports:
+      - "1333:1333"
+    volumes:
+      - "media.location=/Users/macbook/Documents/ecommerce-api/"
+    environment:
+      MEDIA_LOCATION:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-sb13:5432/ecommerce_db
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:1301/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-sb13:8080/realms/ecommerce/protocol/openid-connect/certs
+      # spring.datasource.url=jdbc:postgresql://localhost:1300/ecommerce_db
+      # spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:1301/realms/ecommerce
+      # spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:1301/realms/ecommerce/protocol/openid-connect/certs
+    networks:
+      - sb13-net
+    depends_on:
+      - postgres-sb13
+      - keycloak-sb13
+
+
+
   keycloak-sb13:
     image: quay.io/keycloak/keycloak:26.6.4
     container_name: keycloak-sb13

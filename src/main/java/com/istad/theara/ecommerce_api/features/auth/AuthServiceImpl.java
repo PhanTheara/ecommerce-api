@@ -1,7 +1,9 @@
 package com.istad.theara.ecommerce_api.features.auth;
 
-import com.istad.theara.ecommerce_api.app.security.KeycloakRoleEnum;
+import com.istad.theara.ecommerce_api.app.Filter.KeycloakRoleEnum;
 import com.istad.theara.ecommerce_api.features.auth.dto.RegisterRequest;
+import com.istad.theara.ecommerce_api.features.userProfile.UserProfile;
+import com.istad.theara.ecommerce_api.features.userProfile.UserProfileRepository;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,7 @@ import java.util.List;
 public class AuthServiceImpl implements AuthService{
 
     private final Keycloak keycloak;
-
+   private final UserProfileRepository userProfileRepository;
     @Value("${keycloak.realm}")
     private String realm;
 
@@ -39,6 +41,7 @@ public class AuthServiceImpl implements AuthService{
         user.setEmail(registerRequest.email());
         user.setFirstName(registerRequest.fistName());
         user.setLastName(registerRequest.lastName());
+
 
         // Validate password and confirmed password
         if (!registerRequest.password().equals(registerRequest.conformPassword())) {
@@ -72,27 +75,48 @@ public class AuthServiceImpl implements AuthService{
             }
             if (response.getStatus() == HttpStatus.CREATED.value()) {
                 log.info("User {} created successfully", user.getUsername());
-                assignGroups(user.getUsername(), usersResource);
-                assignRoles(user.getUsername(),usersResource);
+                // insert into user profile data base
+                UserProfile userProfile = new  UserProfile();
+                userProfile.setId(credential.getId());
+                assignRoles(user.getUsername());
+                assignGroups(user.getUsername());
+                saveUserProfile(user.getUsername());
+
             }
         }
     }
 
-    private void assignGroups(String username, UsersResource usersResource) {
-        UserRepresentation createdUser = usersResource.search(username).getFirst();
-        UserResource keycloakUser = usersResource.get(createdUser.getId());
+    private UsersResource getUsersResource() {
+        return keycloak.realm(realm).users();
+    }
+
+    private UserRepresentation getUser(String username) {
+        return getUsersResource().search(username).getFirst();
+    }
+    private void saveUserProfile(String username){
+        UserRepresentation createdUser = getUser(username);
+        UserProfile userProfile = new UserProfile();
+        userProfile.setId(createdUser.getId());
+        userProfileRepository.save(userProfile);
+    }
+
+    private void assignGroups(String username) {
+        UserRepresentation createdUser = getUser(username);
+        UserResource keycloakUser = getUsersResource().get(createdUser.getId());
         GroupsResource groupsResource = keycloak.realm(realm).groups();
-        GroupRepresentation groupEcommerce = groupsResource.groups("Eommerce", 0, 1).getFirst();
+        GroupRepresentation groupEcommerce = groupsResource
+                .groups("Eommerce", 0, 1)
+                .getFirst();
         log.info("Group Id: {}", groupEcommerce.getId());
         keycloakUser.joinGroup(groupEcommerce.getId());
     }
 
-    private void assignRoles(String username, UsersResource usersResource) {
+    private void assignRoles(String username) {
         // Start assigning role (USER, CUSTOMER)
         // Load created user by username from Keycloak
-        UserRepresentation createdUser = usersResource.search(username).getFirst();
+        UserRepresentation createdUser = getUser(username);
 
-        UserResource keycloakUser = usersResource.get(createdUser.getId());
+        UserResource keycloakUser = getUsersResource().get(createdUser.getId());
 
         // Create RoleRepresentation
         RolesResource rolesResource = keycloak.realm(realm).roles();
