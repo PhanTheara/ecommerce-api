@@ -8,18 +8,9 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
-@Mapper(
-        componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL
-)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
 public interface OrderLineMapper {
-
-    @Mapping(
-            source = "productEntity.id",
-            target = "productId",
-            defaultExpression = "java(orderLinesEntity.getProductEntity() != null ? orderLinesEntity.getProductEntity().getId() : null)"
-    )
+    @Mapping(source = "productEntity.id", target = "productId")
     OrderLineResponse toResponse(OrderLinesEntity orderLinesEntity);
-
     List<OrderLineResponse> toResponseList(List<OrderLinesEntity> orderLinesEntities);
 }

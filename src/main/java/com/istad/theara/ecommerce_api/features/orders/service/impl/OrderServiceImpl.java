@@ -1,6 +1,6 @@
 package com.istad.theara.ecommerce_api.features.orders.service.impl;
 import com.istad.theara.ecommerce_api.app.Enums.OrderStatus;
-import com.istad.theara.ecommerce_api.features.orders.Dto.OrderRequest;
+import com.istad.theara.ecommerce_api.features.orders.Dto.SaleOrderRequest;
 import com.istad.theara.ecommerce_api.features.orders.Dto.OrderResponse;
 import com.istad.theara.ecommerce_api.features.orders.Entity.OrderEntity;
 import com.istad.theara.ecommerce_api.features.orders.Entity.OrderLinesEntity;
@@ -31,37 +31,33 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse createOrder(OrderRequest orderRequest) {
+    public OrderResponse saleOrders(SaleOrderRequest saleOrderRequest) {
         String userId = AuthUtils.extractUserId();
 
         OrderEntity order = new OrderEntity();
-        order.setAddress(orderRequest.address());
+        order.setAddress(saleOrderRequest.address());
         order.setCustomerId(userId);
-        order.setDiscount(orderRequest.discount() != null ? orderRequest.discount() : BigDecimal.ZERO);
+        order.setDiscount(saleOrderRequest.discount() != null ? saleOrderRequest.discount() : BigDecimal.ZERO);
         order.setIsDeleted(false);
         order.setStatus(OrderStatus.PENDING);
-        List<OrderLinesEntity> orderLines = calculateAndBuildOrderLines(orderRequest, order);
-        // Explicit bidirectional relationship link
+        List<OrderLinesEntity> orderLines = calculateAndBuildOrderLines(saleOrderRequest, order);
         for (OrderLinesEntity line : orderLines) {
             line.setOrderEntity(order);
         }
         order.setOrderLinesEntity(orderLines);
-        BigDecimal subtotal = orderLines.stream()
-                .map(line -> line.getUnitPrice().multiply(BigDecimal.valueOf(line.getQty())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (OrderLinesEntity line : orderLines) {
+            subtotal = subtotal.add(line.getUnitPrice().multiply(BigDecimal.valueOf(line.getQty())));
+        }
         BigDecimal totalPrice = subtotal.subtract(order.getDiscount());
         order.setTotalPrice(totalPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : totalPrice);
-
-        // Save order (cascading saves order lines if CascadeType.ALL is configured)
         OrderEntity savedOrder = orderRepository.save(order);
-
         return orderMapper.toResponse(savedOrder);
     }
 
     @Override
     @Transactional
-    public OrderResponse updateOrder(Long id, OrderRequest orderRequest) {
+    public OrderResponse updateOrder(Long id, SaleOrderRequest orderRequest) {
         String userId = AuthUtils.extractUserId();
         OrderEntity order = orderRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + id));
@@ -90,7 +86,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
+    public List<OrderResponse> getOrdersByCustomerId() {
+        String customerId = AuthUtils.extractUserId();
         return orderMapper.toResponse(orderRepository.findAllByCustomerIdAndIsDeletedFalse(customerId));
     }
 
@@ -110,10 +107,10 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 
-    private List<OrderLinesEntity> calculateAndBuildOrderLines(OrderRequest request, OrderEntity order) {
+    private List<OrderLinesEntity> calculateAndBuildOrderLines(SaleOrderRequest request, OrderEntity order) {
         List<OrderLinesEntity> lines = new ArrayList<>();
 
-        request.orderLines().forEach(lineReq -> {
+        request.orderItem().forEach(lineReq -> {
             ProductEntity product = productRepository.findById(lineReq.productId())
                     .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + lineReq.productId()));
 

@@ -10,10 +10,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OrderMapper {
-
     @Mapping(source = "orderLinesEntity", target = "orderLines")
-        // Remove the custom @Mapping for status if entity.getStatus() is already an OrderStatus enum
     OrderResponse toResponse(OrderEntity entity);
-
     List<OrderResponse> toResponse(List<OrderEntity> orderEntities);
 }

@@ -14,18 +14,17 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Table(name = "tbl_order_line")
 public class OrderLinesEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
     @Column(nullable = false)
-    private Integer qty;
+    Integer qty;
     @Column(nullable = false)
-    private BigDecimal unitPrice;
+    BigDecimal unitPrice;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private ProductEntity productEntity;
+    ProductEntity productEntity;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
-    private OrderEntity orderEntity;
+    OrderEntity orderEntity;
 }

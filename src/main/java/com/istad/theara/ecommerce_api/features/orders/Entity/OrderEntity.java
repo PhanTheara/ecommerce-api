@@ -2,9 +2,11 @@ package com.istad.theara.ecommerce_api.features.orders.Entity;
 
 import com.istad.theara.ecommerce_api.app.Enums.OrderStatus;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -17,27 +19,29 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Table(name = "tbl_order")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
     @Column(nullable = false)
-    private String address;
+    String address;
     @Column(nullable = false)
-    private String customerId;
+    String customerId;
+    @Column(length = 255,name = "STORE_ID")
+    String storeId;
     @Column(nullable = false)
-    private BigDecimal discount = BigDecimal.ZERO;
+    BigDecimal discount = BigDecimal.ZERO;
     @Column(nullable = false)
-    private Boolean isDeleted = false;
+    Boolean isDeleted = false;
     @Column(nullable = false)
-    private BigDecimal totalPrice = BigDecimal.ZERO;
+    BigDecimal totalPrice = BigDecimal.ZERO;
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    OrderStatus status;
     @OneToMany(mappedBy = "orderEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderLinesEntity> orderLinesEntity = new ArrayList<>();
+    List<OrderLinesEntity> orderLinesEntity = new ArrayList<>();
 }

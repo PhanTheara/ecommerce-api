@@ -1,0 +1,87 @@
+networks:
+  sb13-net:
+    external: true
+volumes:
+  sb13-vol:
+  keycloak-sb13-vol:
+services:
+
+  spring-sb13:
+    image: spring-13:1.0.0
+    build: ./spring
+    container_name: spring-sb13
+    ports:
+      - "1333:1333"
+    environment:
+      KEYCLOAK_SERVER_URL: https://keyloack.theara.site:8080
+      KEYCLOAK_REALM: ecommerce
+      KEYCLOAK_CLIENT_ID: private-app
+      KEYCLOAK_CLIENT_SECRET: VakTxZVnIZtSfU1w09BVZnZLPSfLNWCK
+      MEDIA_LOCATION: "/workspace/upload-image-ecommerce"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-sb13:5432/ecommerce_db
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://keyloack.theara.site/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://keycloak-sb13:8080/realms/ecommerce/protocol/openid-connect/certs
+      MEDIA_BASE_URL: https://keyloack.theara.site
+      DATABASE_URL: jdbc:postgresql://keycloak-sb13:1300/ecommerce_db
+      DATABASE_USERNAME: sb13usr
+      DATABASE_PASSWORD: qwerqwer
+    volumes:
+      - "/opt/istand-ecommerce-app-api/upload-image-ecommerce:/workspace/upload-image-ecommerce"
+    networks:
+      - sb13-net
+    depends_on:
+      - postgres-sb13
+      - keycloak-sb13
+
+  keycloak-sb13:
+    image: quay.io/keycloak/keycloak:26.6.4
+    container_name: keycloak-sb13
+    ports:
+      - "1301:8080"
+    command: start # start keycloak server in production
+    environment:
+      # Database Configuration
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-sb13:5432/keycloak_db
+      KC_DB_USERNAME: sb13usr
+      KC_DB_PASSWORD: qwerqwer
+      # Admin User
+      KC_BOOTSTRAP_ADMIN_USERNAME: temp_admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: temp_qwerqwer
+      # Production Setting
+      KC_HOSTNAME: https://keyloack.theara.site
+      KC_HOSTNAME_PORT: 1301
+      KC_HOSTNAME_URL: https://keyloack.theara.site
+      KC_HOSTNAME_ADMIN_URL: https://keyloack.theara.site
+      KC_HOSTNAME_STRICT: true               # set to true if HTTPS
+      KC_HOSTNAME_STRICT_HTTPS: true         # set to true if HTTPS
+      KC_PROXY: edge
+      KC_HTTP_ENABLED: true
+      #KC_HTTPS_PORT: 443
+      KC_PROXY_HEADERS: xforwarded
+      KC_CACHE: ispn
+      KC_LOG_LEVEL: INFO
+      KC_METRICS_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      JAVA_OPTS_APPEND: "-Xms512m -Xmx2048m"
+    volumes:
+      - keycloak-sb13-vol:/opt/keycloak/data
+      - ./keycloak/themes:/opt/keycloak/themes
+      - ./keycloak/conf:/opt/keycloak/conf
+    networks:
+      - sb13-net
+    depends_on:
+      - postgres-sb13
+  postgres-sb13:
+    image: postgres:18.4
+    container_name: postgres-sb13
+    ports:
+      - "1300:5432"
+    environment:
+      POSTGRES_PASSWORD: qwerqwer #(required)
+      POSTGRES_USER: sb13usr
+    volumes:
+      - sb13-vol:/var/lib/postgresql/18/docker
+      - ./init_db/:/docker-entrypoint-initdb.d
+    networks:
+      - sb13-net
